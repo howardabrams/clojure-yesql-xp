@@ -10,13 +10,22 @@ LEIN=$BIN/lein
 mkdir -p $BIN
 if [ ! -f $LEIN ]
 then
-    curl --output $LEIN $LEIN_URL
+    wget --output-document=$LEIN $LEIN_URL
     chmod a+x $LEIN
 fi
 
-# cd $HOME
-# $LEIN new yesql-xp
-ln -s /vagrant/yesql-xp $HOME
+if [ ! -e $HOME/yesql-xp ]
+then
+    ln -s /vagrant/yesql-xp $HOME
+fi
+
+if [ ! -e $HOME/.lein/profiles.clj ]
+then
+    cat > $HOME/.lein/profiles.clj <<EOF
+{:user {:plugins [[cider/cider-nrepl "0.9.0-SNAPSHOT"]]
+        :dependencies [[org.clojure/tools.nrepl "0.2.7"]]}}
+EOF
+fi
 
 cd /vagrant/yesql-xp
 $LEIN deps

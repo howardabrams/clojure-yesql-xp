@@ -1,0 +1,22 @@
+#!/bin/bash
+
+DB_USER=root
+DB_PASS=byebye
+DB_NAME=bx
+alias bxmsql="mysql -u $DB_USER -p$DB_PASS $DB_NAME"
+
+# If we have a tmux session running, attach to it, otherwise, start
+# one up, and a mysql and clojure repl:
+
+if [ "$TERM" != "screen" ]
+then
+    if type tmux >/dev/null 2>&1
+    then
+        tmux att -t YesQL ||
+        tmux \
+            new -s YesQL -n shell \; \
+            neww -n mysql "mysql -u $DB_USER -p$DB_PASS $DB_NAME" \; \
+            neww -n clj "cd yesql-xp; AUSTIN_DEFAULT_SERVER_PORT=4343 lein repl :headless :host 0.0.0.0 :port 4242" \; \
+            neww -n repl "cd yesql-xp; sleep 15; lein repl :connect 4242"
+    fi
+fi
