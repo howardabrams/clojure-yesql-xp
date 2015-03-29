@@ -94,17 +94,28 @@ and we could follow along with instructions from [this site][3].
 However, I'm thinking that for this project, we could probably figure
 out how to explore it on our own.
 
+The SQL query files for YesQL go in the `yesql-xp/resources` directory.
+Create file, `book-count.sql` that contains (including the comments):
+
+    -- Counts the number of books. Notice this uses the un-standard MySQL
+    -- syntax that requires the table name to be surrounded in backquotes.
+
+    SELECT count(*) AS count
+    FROM `BX-Books`;
 
 Assuming you can connect to the running REPL running on `localhost` on port 4242,
-type the following to load one of the SQL files:
+get the `defquery` function:
 
     (require '[yesql.core :refer [defquery]])
+
+And let's associate our SQL file with a variable:
+
     (defquery num-books "book-count.sql")
 
-As the `num-books` references the SQL file: `yesql-xp/resources/book-count.sql`
+Now `num-books` references the SQL file: `yesql-xp/resources/book-count.sql`
 
-You can then type: `(clojure.repl/doc num-books)` to get the SQL
-comments associated with it. Pretty nice.
+Typing: `(clojure.repl/doc num-books)` gets that query's documentation
+(e.g. comments). Pretty nice.
 
 To write some Clojure code to use this SQL "function" and connect to
 the database to have it evaluated, edit `yesql-xp/src/yesql_xp/core.clj`
