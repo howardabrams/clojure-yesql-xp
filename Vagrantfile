@@ -28,6 +28,7 @@ Vagrant.configure("2") do |config|
     # Server port forwarding ... this may be optional for this project
     config.vm.network :forwarded_port, guest: 4242, host: 4242 # nrepl
     config.vm.network :forwarded_port, guest: 4343, host: 4343 # browser
+    config.vm.network :forwarded_port, guest: 3306, host: 3306 # mysql
 
     config.vm.provider "virtualbox" do |v|
       v.memory = 2048

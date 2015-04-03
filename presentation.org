@@ -1,0 +1,193 @@
+#+TITLE:  Showing Off YesQL
+#+AUTHOR: Howard Abrams
+#+EMAIL:  howard.abrams@gmail.com
+#+DATE:   2015 Feb 26
+#+TAGS:   clojure presentation technical
+
+* Mini Workshop on YesQL
+
+  While we are waiting ...
+
+  * Install VirtualBox:   http://virtualbox.org
+  * Install Vagrant:     http://vagrantup.com
+  * Download the workshop:
+    git clone https://github.com/howardabrams/clojure-yesql-xp.git
+
+* The Problem
+
+  * Our Clojure experiences vary widely
+  * Our tech chops vary widely
+  * We want beginners to get attend
+
+  What can we discuss?
+* Background
+
+  In the Beginning...
+
+  * We discussed interesting topics for mini presentations
+  * We discussed doing some workshops.
+  * I thought ... let’s combine those
+
+  Besides, YesQL, while interesting, could hardly need a full three
+  hour workshop.
+
+* The Rules
+
+  * Host creates a minimal environment for workshop
+    * Based on Vagrant and VirtualBox (but Docker good)
+    * Client apps started in a TMux session
+  * Host does not learn beforehand
+  * Host does not spend a lot of time
+  * Guest will download the environment before...
+
+* Subrules
+
+  * Can we start with cloning a Github repo?
+  * Can we base this on Vagrant and Virtualbox?
+  * Can we always use the same box image? [[https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box][trusty64]]
+
+  If so, starting the environment should be quicker.
+
+* Experiment
+
+  Tonight is an experiment, and you are the lab rats.
+
+  In the Meetup discussion board, let’s have a retrospective:
+  * What went well
+  * What went poorly
+  * What should we do to improve
+
+* How’d I do?
+
+  Spent too much time...
+
+  * Started with Postgres
+  * Looked for interesting data
+  * Redid with MySQL
+
+  End result is a “go” script that should rock.
+
+* On to the Show
+
+  Let’s talk about YesQL...
+
+** ORM? OMG!
+
+   * ORM adds complexity for little benefit
+   * SQL was written for non-programmers
+   * We seldom change our database
+   * What about an SQL mode?
+
+** SQL as Strings?
+
+   SQL in strings doesn’t allow tools to correct syntax;
+
+   #+BEGIN_SRC clojure
+     (query "SELECT * FROM users WHERE country_code = ?" "GB")
+   #+END_SRC
+
+** Clojure DSL for SQL?
+
+   Is the DSL complete?
+   What do you do when it isn’t?
+
+   #+BEGIN_SRC clojure
+   (select :*
+        (from :users)
+        (where (= :country_code "GB")))
+   #+END_SRC
+
+** YesQL Way
+
+   Put the SQL in its own file:
+
+   #+BEGIN_SRC sql
+     SELECT *
+     FROM users
+     WHERE country_code = ?
+   #+END_SRC
+
+   And reference it from Clojure:
+
+   #+BEGIN_SRC clojure
+     (defquery users-by-country "some/where/users_by_country.sql")
+     (users-by-country db-spec "GB")
+   #+END_SRC
+
+* Set up a Virtual Machine
+
+  First step starts a virtual machine using the [[file:Vagrantfile][Vagrantfile]].
+
+  #+BEGIN_SRC sh :results output pp
+    vagrant destroy -f
+    vagrant up --provision
+  #+END_SRC
+
+** Provisioning
+
+  Provisioning process runs the following scripts:
+
+  * [[file:Vagrantboot/bootstrap-clojure.sh]]
+  * [[file:Vagrantboot/bootstrap-mysql.sh]]
+  * [[file:Vagrantboot/import-dataset.sh]]
+    Downloads and imports a book review dataset (in three tables) into MySQL.
+  * [[file:Vagrantboot/profile]]
+    Starts up a TMUX session with a MySQL client and a REPL
+* Database Schema
+  :PROPERTIES:
+  :engine:   mysql
+  :dbhost:   172.16.0.10
+  :dbuser:   howard
+  :database: bx
+  :END:
+
+  Let’s investigate the schema:
+
+  #+BEGIN_SRC sql
+  show tables;
+  #+END_SRC
+
+  #+RESULTS:
+  | Tables_in_bx    |
+  |-----------------|
+  | BX-Book-Ratings |
+  | BX-Books        |
+  | BX-Users        |
+
+  #+BEGIN_SRC sql
+  SHOW columns FROM `BX-Users`;
+  #+END_SRC
+
+  #+RESULTS:
+  | Field    | Type         | Null | Key | Default | Extra |
+  |----------+--------------+------+-----+---------+-------|
+  | User-ID  | int(11)      | NO   | PRI | 0       |       |
+  | Location | varchar(250) | YES  |     | NULL    |       |
+  | Age      | int(11)      | YES  |     | NULL    |       |
+
+  #+BEGIN_SRC sql
+  SHOW columns FROM `BX-Books`;
+  #+END_SRC
+
+  #+RESULTS:
+  | Field               | Type             | Null | Key | Default | Extra |
+  |---------------------+------------------+------+-----+---------+-------|
+  | ISBN                | varchar(13)      | NO   | PRI |         |       |
+  | Book-Title          | varchar(255)     | YES  |     | NULL    |       |
+  | Book-Author         | varchar(255)     | YES  |     | NULL    |       |
+  | Year-Of-Publication | int(10) unsigned | YES  |     | NULL    |       |
+  | Publisher           | varchar(255)     | YES  |     | NULL    |       |
+  | Image-URL-S         | varchar(255)     | YES  |     | NULL    |       |
+  | Image-URL-M         | varchar(255)     | YES  |     | NULL    |       |
+  | Image-URL-L         | varchar(255)     | YES  |     | NULL    |       |
+
+  #+BEGIN_SRC sql
+  SHOW columns FROM `BX-Book-Ratings`;
+  #+END_SRC
+
+  #+RESULTS:
+  | Field       | Type        | Null | Key | Default | Extra |
+  |-------------+-------------+------+-----+---------+-------|
+  | User-ID     | int(11)     | NO   | PRI |       0 |       |
+  | ISBN        | varchar(13) | NO   | PRI |         |       |
+  | Book-Rating | int(11)     | NO   |     |       0 |       |
